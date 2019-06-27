@@ -1,9 +1,7 @@
 buildscript {
   repositories {
-    mavenCentral()
-    maven {
-      url 'https://plugins.gradle.org/m2/'
-    }
+    maven { url 'http://artifactory.fkinternal.com/artifactory/v1.0/artifacts/libs-snapshots-local' }
+    maven { url 'http://artifactory.fkinternal.com/artifactory/v1.0/artifacts/libs-release-local' }
   }
   dependencies {
     classpath 'com.linkedin:gradle-dustjs-plugin:1.0.0'
@@ -16,8 +14,8 @@ apply plugin: 'distribution'
 
 allprojects {
   repositories {
-    mavenCentral()
-    mavenLocal()
+    maven { url 'http://artifactory.fkinternal.com/artifactory/v1.0/artifacts/libs-snapshots-local' }
+    maven { url 'http://artifactory.fkinternal.com/artifactory/v1.0/artifacts/libs-release-local' }
   }
 }
 
@@ -209,6 +207,9 @@ project(':azkaban-webserver') {
     errorprone {
       transitive = true
     }
+
+    configurations.generateRestli {
+      resolutionStrategy.force 'com.sun.codemodel:codemodel:2.6'
   }
 
   dependencies {
