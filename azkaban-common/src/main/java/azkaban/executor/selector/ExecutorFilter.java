@@ -183,6 +183,14 @@ public final class ExecutorFilter extends CandidateFilter<Executor, ExecutableFl
           logger.debug(String.format("%s : filtering out the target as it is null.", EXECUTOR_GROUPING_FILTER_NAME));
           return false;
         }
+
+        if (null == filteringTarget.getExecutorInfo()) {
+          logger.debug(String.format("%s : filtering out %s as it's stats is unavailable.",
+                  EXECUTOR_GROUPING_FILTER_NAME,
+                  filteringTarget.toString()));
+          return false;
+        }
+
         String group = filteringTarget.getGroup();
         if (group == null) {
           logger.debug(String.format("%s : Not filtering out %s as it's group is not specified. Falling back " +
