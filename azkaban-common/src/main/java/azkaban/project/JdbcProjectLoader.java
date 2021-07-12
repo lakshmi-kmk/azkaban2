@@ -30,8 +30,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
@@ -1091,6 +1093,18 @@ public class JdbcProjectLoader extends AbstractJdbcLoader implements
     }
   }
 
+  public Set<Integer> fetchProjectIdsByEventType(EventType eventType) throws ProjectManagerException {
+    QueryRunner runner = createQueryRunner();
+    ProjectIdsByEventTypeResultHandler handler = new ProjectIdsByEventTypeResultHandler();
+
+    try {
+      return runner.query(ProjectIdsByEventTypeResultHandler.SELECT_PROJECTS_BY_EVENT_TYPE,
+              handler, eventType.getNumVal());
+    } catch (SQLException e) {
+      throw new ProjectManagerException("Error fetching projects by event type : " + eventType.name(), e);
+    }
+  }
+
   @Override
   public void cleanOlderProjectVersion(int projectId, int version)
       throws ProjectManagerException {
@@ -1101,6 +1115,18 @@ public class JdbcProjectLoader extends AbstractJdbcLoader implements
       cleanOlderProjectVersionProperties(connection, projectId, version);
       cleanOlderProjectFiles(connection, projectId, version);
       cleanOlderProjectVersion(connection, projectId, version);
+    } finally {
+      DbUtils.closeQuietly(connection);
+    }
+  }
+
+  @Override
+  public void cleanProjectFiles(Project project)
+          throws ProjectManagerException {
+    Connection connection = getConnection();
+
+    try {
+      cleanOlderProjectFiles(connection, project.getId(), project.getVersion() + 1);
     } finally {
       DbUtils.closeQuietly(connection);
     }
@@ -1260,6 +1286,29 @@ public class JdbcProjectLoader extends AbstractJdbcLoader implements
       } while (rs.next());
 
       return projects;
+    }
+  }
+
+  private static class ProjectIdsByEventTypeResultHandler implements
+          ResultSetHandler<Set<Integer>> {
+    private static final String SELECT_PROJECTS_BY_EVENT_TYPE =
+            "SELECT distinct(project_id) from project_events WHERE `event_type`=?";
+
+    @Override
+    public Set<Integer> handle(ResultSet rs)
+            throws SQLException {
+      if (!rs.next()) {
+        return Collections.<Integer> emptySet();
+      }
+
+      Set<Integer> projectIds =
+              new HashSet<Integer>();
+      do {
+        int project = rs.getInt(1);
+        projectIds.add(project);
+      } while (rs.next());
+
+      return projectIds;
     }
   }
 

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import azkaban.project.ProjectLogEvent.EventType;
 import azkaban.flow.Flow;
@@ -200,6 +201,17 @@ public class MockProjectLoader implements ProjectLoader {
       throws ProjectManagerException {
     // TODO Auto-generated method stub
 
+  }
+
+  @Override
+  public void cleanProjectFiles(Project project) throws ProjectManagerException {
+    // TODO Auto-generated method stub
+  }
+
+  @Override
+  public Set<Integer> fetchProjectIdsByEventType(EventType eventType) throws ProjectManagerException {
+    // TODO Auto-generated method stub
+    return null;
   }
 
   @Override
