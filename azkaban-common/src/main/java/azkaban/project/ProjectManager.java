@@ -124,6 +124,18 @@ public class ProjectManager {
     private boolean shutdown = false;
     private long lastProjectFileCleanTime = -1;
 
+    /**
+     * Cleaner Thread to clean up old project files if <code>projectFilesCleanupEnabled</code> is enabled.
+     *
+     * <p>It runs daily and finds out projects which were modified before projectFilesRetentionMs.
+     * Projects which were scheduled at least once via Azkaban will be excluded from the above list
+     * </p>
+     *
+     * <p>After filtering all the projects, Azkaban will delete data from project_files table for
+     * these projects and deactivates the projects in DB so that loading time for Azkaban decreases
+     * for future. Also, this flow removes the project from internal cache.
+     * </p>
+     */
     public CleanerThread() {
       this.setName("ProjectManager-Cleaner-Thread");
       logger.info("Starting cleaner thread: " + this.getName());
@@ -186,7 +198,7 @@ public class ProjectManager {
     List<Project> projects;
     try {
       projects = projectLoader.fetchAllActiveProjects();
-      logger.info("Active projects count: " + projects.size());
+      logger.info(String.format("Active projects count: %s", projects.size()));
     } catch (ProjectManagerException e) {
       throw new RuntimeException("Could not load projects from store.", e);
     }

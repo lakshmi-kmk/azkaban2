@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import azkaban.user.Permission;
 import azkaban.user.User;
 import azkaban.utils.Props;
 import azkaban.utils.Triple;
+import com.google.common.collect.Sets;
 
 public class MockProjectLoader implements ProjectLoader {
   public File dir;
@@ -211,7 +213,7 @@ public class MockProjectLoader implements ProjectLoader {
   @Override
   public Set<Integer> fetchProjectIdsByEventType(EventType eventType) throws ProjectManagerException {
     // TODO Auto-generated method stub
-    return null;
+    return new HashSet<>();
   }
 
   @Override
