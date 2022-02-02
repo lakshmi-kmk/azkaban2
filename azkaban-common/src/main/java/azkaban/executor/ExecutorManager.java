@@ -66,6 +66,8 @@ public class ExecutorManager extends EventHandler implements
       "azkaban.executorinfo.refresh.maxThreads";
   private static final String AZKABAN_MAX_DISPATCHING_ERRORS_PERMITTED =
     "azkaban.maxDispatchingErrors";
+  private static final String AZKABAN_WEBSERVER_CLEANER_WAIT_INTERVAL =
+          "azkaban.webserver.cleaner.waitInterval.ms";
 
   private static Logger logger = Logger.getLogger(ExecutorManager.class);
   private ExecutorLoader executorLoader;
@@ -1689,12 +1691,14 @@ public class ExecutorManager extends EventHandler implements
         24 * 60 * 60 * 1000;
 
     private final long executionLogsRetentionMs;
+    private final long cleanerThreadCustomWaitIntervalMs;
 
     private boolean shutdown = false;
     private long lastLogCleanTime = -1;
 
     public CleanerThread(long executionLogsRetentionMs) {
       this.executionLogsRetentionMs = executionLogsRetentionMs;
+      this.cleanerThreadCustomWaitIntervalMs = azkProps.getLong(AZKABAN_WEBSERVER_CLEANER_WAIT_INTERVAL, CLEANER_THREAD_WAIT_INTERVAL_MS);
       this.setName("AzkabanWebServer-Cleaner-Thread");
     }
 
@@ -1712,12 +1716,12 @@ public class ExecutorManager extends EventHandler implements
 
             // Cleanup old stuff.
             long currentTime = System.currentTimeMillis();
-            if (currentTime - CLEANER_THREAD_WAIT_INTERVAL_MS > lastLogCleanTime) {
+            if (currentTime - cleanerThreadCustomWaitIntervalMs > lastLogCleanTime) {
               cleanExecutionLogs();
               lastLogCleanTime = currentTime;
             }
 
-            wait(CLEANER_THREAD_WAIT_INTERVAL_MS);
+            wait(cleanerThreadCustomWaitIntervalMs);
           } catch (InterruptedException e) {
             logger.info("Interrupted. Probably to shut down.");
           }
