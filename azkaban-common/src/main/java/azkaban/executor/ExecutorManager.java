@@ -75,13 +75,13 @@ public class ExecutorManager extends EventHandler implements
   private CleanerThread cleanerThread;
 
   private ConcurrentHashMap<Integer, Pair<ExecutionReference, ExecutableFlow>> runningFlows =
-      new ConcurrentHashMap<Integer, Pair<ExecutionReference, ExecutableFlow>>();
+          new ConcurrentHashMap<>();
   private ConcurrentHashMap<Integer, ExecutableFlow> recentlyFinished =
-      new ConcurrentHashMap<Integer, ExecutableFlow>();
+          new ConcurrentHashMap<>();
 
   QueuedExecutions queuedFlows;
 
-  final private Set<Executor> activeExecutors = new HashSet<Executor>();
+  final private Set<Executor> activeExecutors = new HashSet<>();
   private QueueProcessorThread queueProcessor;
 
   private ExecutingManagerUpdaterThread executingManager;
@@ -145,7 +145,7 @@ public class ExecutorManager extends EventHandler implements
     Map<String, String> compListStrings =
       azkProps.getMapByPrefix(AZKABAN_EXECUTOR_SELECTOR_COMPARATOR_PREFIX);
     if (compListStrings != null) {
-      comparatorWeightsMap = new TreeMap<String, Integer>();
+      comparatorWeightsMap = new TreeMap<>();
       for (Map.Entry<String, String> entry : compListStrings.entrySet()) {
         comparatorWeightsMap.put(entry.getKey(), Integer.valueOf(entry.getValue()));
       }
@@ -173,7 +173,7 @@ public class ExecutorManager extends EventHandler implements
    */
   @Override
   public void setupExecutors() throws ExecutorManagerException {
-    Set<Executor> newExecutors = new HashSet<Executor>();
+    Set<Executor> newExecutors = new HashSet<>();
 
     if (isMultiExecutorMode()) {
       logger.info("Initializing multi executors from database");
@@ -221,19 +221,14 @@ public class ExecutorManager extends EventHandler implements
     synchronized (activeExecutors) {
 
       List<Pair<Executor, Future<String>>> futures =
-        new ArrayList<Pair<Executor, Future<String>>>();
+              new ArrayList<>();
       for (final Executor executor : activeExecutors) {
         // execute each executorInfo refresh task to fetch
         Future<String> fetchExecutionInfo =
-          executorInforRefresherService.submit(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-              return callExecutorForJsonString(executor.getHost(),
-                executor.getPort(), "/serverStatistics", null);
-            }
-          });
-        futures.add(new Pair<Executor, Future<String>>(executor,
-          fetchExecutionInfo));
+          executorInforRefresherService.submit(() -> callExecutorForJsonString(executor.getHost(),
+            executor.getPort(), "/serverStatistics", null));
+        futures.add(new Pair<>(executor,
+                fetchExecutionInfo));
       }
 
       boolean wasSuccess = true;
@@ -390,7 +385,7 @@ public class ExecutorManager extends EventHandler implements
   @Override
   public Set<String> getPrimaryServerHosts() {
     // Only one for now. More probably later.
-    HashSet<String> ports = new HashSet<String>();
+    HashSet<String> ports = new HashSet<>();
     for (Executor executor : activeExecutors) {
       ports.add(executor.getHost() + ":" + executor.getPort());
     }
@@ -400,7 +395,7 @@ public class ExecutorManager extends EventHandler implements
   @Override
   public Set<String> getAllActiveExecutorServerHosts() {
     // Includes non primary server/hosts
-    HashSet<String> ports = new HashSet<String>();
+    HashSet<String> ports = new HashSet<>();
     for (Executor executor : activeExecutors) {
       ports.add(executor.getHost() + ":" + executor.getPort());
     }
@@ -441,7 +436,7 @@ public class ExecutorManager extends EventHandler implements
    */
   @Override
   public List<Integer> getRunningFlows(int projectId, String flowId) {
-    List<Integer> executionIds = new ArrayList<Integer>();
+    List<Integer> executionIds = new ArrayList<>();
     executionIds.addAll(getRunningFlowsHelper(projectId, flowId,
       queuedFlows.getAllEntries()));
     executionIds.addAll(getRunningFlowsHelper(projectId, flowId,
@@ -453,7 +448,7 @@ public class ExecutorManager extends EventHandler implements
   /* Helper method for getRunningFlows */
   private List<Integer> getRunningFlowsHelper(int projectId, String flowId,
     Collection<Pair<ExecutionReference, ExecutableFlow>> collection) {
-    List<Integer> executionIds = new ArrayList<Integer>();
+    List<Integer> executionIds = new ArrayList<>();
     for (Pair<ExecutionReference, ExecutableFlow> ref : collection) {
       if (ref.getSecond().getFlowId().equals(flowId)
         && ref.getSecond().getProjectId() == projectId) {
@@ -470,10 +465,9 @@ public class ExecutorManager extends EventHandler implements
    * @see azkaban.executor.ExecutorManagerAdapter#getActiveFlowsWithExecutor()
    */
   @Override
-  public List<Pair<ExecutableFlow, Executor>> getActiveFlowsWithExecutor()
-    throws IOException {
+  public List<Pair<ExecutableFlow, Executor>> getActiveFlowsWithExecutor() {
     List<Pair<ExecutableFlow, Executor>> flows =
-      new ArrayList<Pair<ExecutableFlow, Executor>>();
+            new ArrayList<>();
     getActiveFlowsWithExecutorHelper(flows, queuedFlows.getAllEntries());
     getActiveFlowsWithExecutorHelper(flows, runningFlows.values());
     return flows;
@@ -484,8 +478,8 @@ public class ExecutorManager extends EventHandler implements
     List<Pair<ExecutableFlow, Executor>> flows,
     Collection<Pair<ExecutionReference, ExecutableFlow>> collection) {
     for (Pair<ExecutionReference, ExecutableFlow> ref : collection) {
-      flows.add(new Pair<ExecutableFlow, Executor>(ref.getSecond(), ref
-        .getFirst().getExecutor()));
+      flows.add(new Pair<>(ref.getSecond(), ref
+              .getFirst().getExecutor()));
     }
   }
 
@@ -500,8 +494,7 @@ public class ExecutorManager extends EventHandler implements
   public boolean isFlowRunning(int projectId, String flowId) {
     boolean isRunning = false;
     isRunning =
-      isRunning
-        || isFlowRunningHelper(projectId, flowId, queuedFlows.getAllEntries());
+            isFlowRunningHelper(projectId, flowId, queuedFlows.getAllEntries());
     isRunning =
       isRunning
         || isFlowRunningHelper(projectId, flowId, runningFlows.values());
@@ -547,7 +540,7 @@ public class ExecutorManager extends EventHandler implements
    */
   @Override
   public List<ExecutableFlow> getRunningFlows() {
-    ArrayList<ExecutableFlow> flows = new ArrayList<ExecutableFlow>();
+    ArrayList<ExecutableFlow> flows = new ArrayList<>();
     getActiveFlowHelper(flows, queuedFlows.getAllEntries());
     getActiveFlowHelper(flows, runningFlows.values());
     return flows;
@@ -572,7 +565,7 @@ public class ExecutorManager extends EventHandler implements
    * @see azkaban.executor.ExecutorManagerAdapter#getRunningFlows()
    */
   public String getRunningFlowIds() {
-    List<Integer> allIds = new ArrayList<Integer>();
+    List<Integer> allIds = new ArrayList<>();
     getRunningFlowsIdsHelper(allIds, queuedFlows.getAllEntries());
     getRunningFlowsIdsHelper(allIds, runningFlows.values());
     Collections.sort(allIds);
@@ -587,7 +580,7 @@ public class ExecutorManager extends EventHandler implements
    * @see azkaban.executor.ExecutorManagerAdapter#getRunningFlows()
    */
   public String getQueuedFlowIds() {
-    List<Integer> allIds = new ArrayList<Integer>();
+    List<Integer> allIds = new ArrayList<>();
     getRunningFlowsIdsHelper(allIds, queuedFlows.getAllEntries());
     Collections.sort(allIds);
     return allIds.toString();
@@ -602,49 +595,40 @@ public class ExecutorManager extends EventHandler implements
   }
 
   public List<ExecutableFlow> getRecentlyFinishedFlows() {
-    return new ArrayList<ExecutableFlow>(recentlyFinished.values());
+    return new ArrayList<>(recentlyFinished.values());
   }
 
   @Override
   public List<ExecutableFlow> getExecutableFlows(Project project,
       String flowId, int skip, int size) throws ExecutorManagerException {
-    List<ExecutableFlow> flows =
-        executorLoader.fetchFlowHistory(project.getId(), flowId, skip, size);
-    return flows;
+    return executorLoader.fetchFlowHistory(project.getId(), flowId, skip, size);
   }
 
   @Override
   public List<ExecutableFlow> getExecutableFlows(int skip, int size)
       throws ExecutorManagerException {
-    List<ExecutableFlow> flows = executorLoader.fetchFlowHistory(skip, size);
-    return flows;
+    return executorLoader.fetchFlowHistory(skip, size);
   }
 
   @Override
   public List<ExecutableFlow> getExecutableFlows(String flowIdContains,
       int skip, int size) throws ExecutorManagerException {
-    List<ExecutableFlow> flows =
-        executorLoader.fetchFlowHistory(null, '%' + flowIdContains + '%', null,
-            0, -1, -1, skip, size);
-    return flows;
+    return executorLoader.fetchFlowHistory(null, '%' + flowIdContains + '%', null,
+        0, -1, -1, skip, size);
   }
 
   @Override
   public List<ExecutableFlow> getExecutableFlows(String projContain,
       String flowContain, String userContain, int status, long begin, long end,
       int skip, int size) throws ExecutorManagerException {
-    List<ExecutableFlow> flows =
-        executorLoader.fetchFlowHistory(projContain, flowContain, userContain,
-            status, begin, end, skip, size);
-    return flows;
+    return executorLoader.fetchFlowHistory(projContain, flowContain, userContain,
+        status, begin, end, skip, size);
   }
 
   @Override
   public List<ExecutableJobInfo> getExecutableJobs(Project project,
       String jobId, int skip, int size) throws ExecutorManagerException {
-    List<ExecutableJobInfo> nodes =
-        executorLoader.fetchJobHistory(project.getId(), jobId, skip, size);
-    return nodes;
+    return executorLoader.fetchJobHistory(project.getId(), jobId, skip, size);
   }
 
   @Override
@@ -665,11 +649,11 @@ public class ExecutorManager extends EventHandler implements
     Pair<ExecutionReference, ExecutableFlow> pair =
         runningFlows.get(exFlow.getExecutionId());
     if (pair != null) {
-      Pair<String, String> typeParam = new Pair<String, String>("type", "flow");
+      Pair<String, String> typeParam = new Pair<>("type", "flow");
       Pair<String, String> offsetParam =
-          new Pair<String, String>("offset", String.valueOf(offset));
+              new Pair<>("offset", String.valueOf(offset));
       Pair<String, String> lengthParam =
-          new Pair<String, String>("length", String.valueOf(length));
+              new Pair<>("length", String.valueOf(length));
 
       @SuppressWarnings("unchecked")
       Map<String, Object> result =
@@ -677,10 +661,8 @@ public class ExecutorManager extends EventHandler implements
               typeParam, offsetParam, lengthParam);
       return LogData.createLogDataFromObject(result);
     } else {
-      LogData value =
-          executorLoader.fetchLogs(exFlow.getExecutionId(), "", 0, offset,
-              length);
-      return value;
+      return executorLoader.fetchLogs(exFlow.getExecutionId(), "", 0, offset,
+          length);
     }
   }
 
@@ -690,15 +672,15 @@ public class ExecutorManager extends EventHandler implements
     Pair<ExecutionReference, ExecutableFlow> pair =
         runningFlows.get(exFlow.getExecutionId());
     if (pair != null) {
-      Pair<String, String> typeParam = new Pair<String, String>("type", "job");
+      Pair<String, String> typeParam = new Pair<>("type", "job");
       Pair<String, String> jobIdParam =
-          new Pair<String, String>("jobId", jobId);
+              new Pair<>("jobId", jobId);
       Pair<String, String> offsetParam =
-          new Pair<String, String>("offset", String.valueOf(offset));
+              new Pair<>("offset", String.valueOf(offset));
       Pair<String, String> lengthParam =
-          new Pair<String, String>("length", String.valueOf(length));
+              new Pair<>("length", String.valueOf(length));
       Pair<String, String> attemptParam =
-          new Pair<String, String>("attempt", String.valueOf(attempt));
+              new Pair<>("attempt", String.valueOf(attempt));
 
       @SuppressWarnings("unchecked")
       Map<String, Object> result =
@@ -706,10 +688,8 @@ public class ExecutorManager extends EventHandler implements
               typeParam, jobIdParam, offsetParam, lengthParam, attemptParam);
       return LogData.createLogDataFromObject(result);
     } else {
-      LogData value =
-          executorLoader.fetchLogs(exFlow.getExecutionId(), jobId, attempt,
-              offset, length);
-      return value;
+      return executorLoader.fetchLogs(exFlow.getExecutionId(), jobId, attempt,
+          offset, length);
     }
   }
 
@@ -723,9 +703,9 @@ public class ExecutorManager extends EventHandler implements
           attempt);
     }
 
-    Pair<String, String> jobIdParam = new Pair<String, String>("jobId", jobId);
+    Pair<String, String> jobIdParam = new Pair<>("jobId", jobId);
     Pair<String, String> attemptParam =
-        new Pair<String, String>("attempt", String.valueOf(attempt));
+            new Pair<>("attempt", String.valueOf(attempt));
 
     @SuppressWarnings("unchecked")
     Map<String, Object> result =
@@ -1182,7 +1162,7 @@ public class ExecutorManager extends EventHandler implements
    *
    * @throws ExecutorManagerException
    *
-   * @see azkaban.executor.ExecutorManagerAdapter#callExecutorStats(java.lang.String,
+   * @see azkaban.executor.ExecutorManagerAdapter#callExecutorStats(int, java.lang.String,
    *      azkaban.utils.Pair[])
    */
   @Override
@@ -1713,6 +1693,7 @@ public class ExecutorManager extends EventHandler implements
         synchronized (this) {
           try {
             lastCleanerThreadCheckTime = System.currentTimeMillis();
+            logger.info("value of cleaner thread wait interval " + cleanerThreadCustomWaitIntervalMs);
 
             // Cleanup old stuff.
             long currentTime = System.currentTimeMillis();
